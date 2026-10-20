@@ -1,0 +1,33 @@
+name: Validate privacy policy site
+
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Validate localized pages
+        run: |
+          test -s docs/index.html
+          test -s docs/fr/index.html
+          test -s docs/de/index.html
+          test -s docs/en/index.html
+          for page in docs/fr/index.html docs/de/index.html docs/en/index.html; do
+            grep -q 'com.leandronoupess.neonsurvivor' "$page"
+            grep -q 'leandrejoel@gmail.com' "$page"
+            grep -q 'VIBRATE' "$page"
+          done
+          if grep -R -n -E '\[(adresse e-mail|email address).*compl[eè]ter' docs; then
+            echo 'A placeholder remains in the published policy.'
+            exit 1
+          fi
